@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalcuCost</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@700&family=Space+Grotesk:wght@500&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #1A1A1D;
+      --card-bg: #091413;
+      --card-border: #1A2A24;
+      --text: #E8E6E3;
+      --text-muted: #8A9298;
+      --input-border: #285A48;
+      --input-border-active: #408A71;
+      --add-bg: #B0E4CC;
+      --add-text: #1A2A24;
+      --edit: #FFCC00;
+      --delete: #C3110C;
+      --close: #2F2FE4;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-full: 50%;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --app-max-width: 640px;
+      --body-padding-y: 64px;
+      --body-padding-x: 16px;
+      --card-padding: 14px 16px;
+      --card-gap: 8px;
+      --input-padding: 12px 14px;
+      --button-size: 32px;
+      --theme-toggle-size: 40px;
+      --theme-toggle-offset: 16px;
+      --sidebar-width: 220px;
+      --sidebar-gap: 24px;
+    }
+
+    [data-theme="light"] {
+      --bg: #F0F2F1;
+      --card-bg: #FFFFFF;
+      --card-border: #D0D4D2;
+      --text: #1A1A1D;
+      --text-muted: #6C7278;
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: var(--body-padding-y) var(--body-padding-x);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: var(--theme-toggle-offset);
+      right: var(--theme-toggle-offset);
+      width: var(--theme-toggle-size);
+      height: var(--theme-toggle-size);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--text-muted);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .app-layout {
+      display: flex;
+      gap: var(--sidebar-gap);
+      align-items: flex-start;
+      max-width: calc(var(--sidebar-width) + var(--sidebar-gap) + var(--app-max-width));
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .history-sidebar {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--body-padding-y);
+      max-height: calc(100vh - var(--body-padding-y) * 2);
+      overflow-y: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .history-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .history-sidebar::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 2px;
+    }
+
+    .sidebar-header {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .sidebar-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .btn-import-export {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px 10px;
+      width: 100%;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-import-export:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: border-color 0.2s, background 0.2s;
+      word-break: break-word;
+    }
+
+    .history-item:hover {
+      border-color: var(--text-muted);
+    }
+
+    .history-item.active {
+      border-color: var(--input-border-active);
+      background: rgba(64, 138, 113, 0.12);
+    }
+
+    .history-item-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .history-item-wrap .history-item-name {
+      flex: 1;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .history-item-delete {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+
+    .history-item:hover .history-item-delete {
+      opacity: 1;
+    }
+
+    .history-item-delete:hover {
+      border-color: var(--delete);
+    }
+
+    .history-item-delete svg {
+      width: 12px;
+      height: 12px;
+      stroke: var(--delete);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .history-empty {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      max-width: var(--app-max-width);
+    }
+
+    .history-toggle {
+      display: none;
+      position: fixed;
+      top: var(--theme-toggle-offset);
+      left: var(--theme-toggle-offset);
+      width: var(--theme-toggle-size);
+      height: var(--theme-toggle-size);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .history-toggle:hover {
+      border-color: var(--text-muted);
+    }
+
+    .history-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--text);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 149;
+    }
+
+    .sidebar-backdrop.open {
+      display: block;
+    }
+
+    h1 {
+      font-family: 'Public Sans', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .product-name-input {
+      font-family: 'Public Sans', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text);
+      width: 100%;
+      padding: 4px 0;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .product-name-input:focus {
+      border-bottom-color: var(--input-border-active);
+    }
+
+    .product-name-input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .btn {
+      font-family: 'Quicksand', sans-serif;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-add {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--add-bg);
+      color: var(--add-text);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .btn-add:hover {
+      opacity: 0.85;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: var(--card-padding);
+      transition: border 0.2s, box-shadow 0.2s, background 0.3s;
+    }
+
+    .card:hover {
+      border-color: var(--text-muted);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    th {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 8px 6px 8px 0;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    th:last-child {
+      padding-right: 0;
+      text-align: center;
+    }
+
+    td {
+      padding: 8px 6px 8px 0;
+      border-bottom: 1px solid var(--card-border);
+      vertical-align: middle;
+    }
+
+    td:last-child {
+      padding-right: 0;
+      text-align: center;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ingredient-name {
+      font-weight: 500;
+      min-width: 80px;
+    }
+
+    .ingredient-price,
+    .ingredient-weight,
+    .ingredient-grams,
+    .ingredient-total {
+      white-space: nowrap;
+    }
+
+    .actions {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .btn-icon {
+      width: var(--button-size);
+      height: var(--button-size);
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, opacity 0.2s;
+    }
+
+    .btn-icon:hover {
+      border-color: var(--text-muted);
+    }
+
+    .btn-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-icon-edit svg {
+      stroke: var(--edit);
+    }
+
+    .btn-icon-delete svg {
+      stroke: var(--delete);
+    }
+
+    .btn-icon-close svg {
+      stroke: var(--close);
+    }
+
+    .btn-icon-confirm svg {
+      stroke: var(--add-bg);
+    }
+
+    .inline-input {
+      background: var(--bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 4px 6px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.875rem;
+      width: 100%;
+      min-width: 50px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .inline-input:focus {
+      border-color: var(--input-border-active);
+    }
+
+    .inline-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .inline-input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    .total-cost {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-md);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--card-border);
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .total-cost span:last-child {
+      font-family: 'Public Sans', sans-serif;
+      color: var(--add-bg);
+    }
+
+    /* ===== PRODUCT ACTIONS ===== */
+    .product-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-md);
+    }
+
+    .product-actions .btn {
+      flex: 1;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .btn-save {
+      background: var(--add-bg);
+      color: var(--add-text);
+    }
+
+    .btn-save:hover {
+      opacity: 0.85;
+    }
+
+    .btn-close-product {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+    }
+
+    .btn-close-product:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    /* ===== NO PRODUCT VIEW ===== */
+    .no-product-view {
+      text-align: center;
+      padding: 48px 0;
+    }
+
+    .no-product-view .subtitle {
+      margin-bottom: 32px;
+    }
+
+    .btn-new-product {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--add-bg);
+      color: var(--add-text);
+      padding: 14px 32px;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-new-product:hover {
+      opacity: 0.85;
+    }
+
+    .btn-new-product:active {
+      transform: scale(0.96);
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      padding: var(--body-padding-x);
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      transform: translateY(12px);
+      transition: transform 0.25s;
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal h2 {
+      font-family: 'Public Sans', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .modal-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-sm);
+      padding: var(--input-padding);
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--input-border-active);
+    }
+
+    .form-group input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-top: 20px;
+    }
+
+    .modal-actions .btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .btn-confirm {
+      background: var(--add-bg);
+      color: var(--add-text);
+    }
+
+    .btn-confirm:hover {
+      opacity: 0.85;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+    }
+
+    .btn-cancel:hover {
+      border-color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px 0;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      body {
+        padding: 32px 12px;
+      }
+
+      h1 {
+        font-size: 2.25rem;
+      }
+
+      table {
+        font-size: 0.8rem;
+      }
+
+      td, th {
+        padding: 6px 4px;
+      }
+
+      .inline-input {
+        font-size: 0.8rem;
+        padding: 2px 4px;
+        min-width: 40px;
+      }
+
+      .product-name-input {
+        font-size: 1.2rem;
+      }
+
+      .product-actions {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .app-layout {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .history-sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 260px;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 150;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid var(--card-border);
+        padding: 72px 16px 16px;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+      }
+
+      .history-sidebar.open {
+        left: 0;
+      }
+
+      .history-toggle {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+    <svg viewBox="0 0 24 24">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+
+  <button class="history-toggle" id="historyToggle" aria-label="Historial">
+    <svg viewBox="0 0 24 24" fill="none">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <div class="app-layout">
+    <aside class="history-sidebar" id="historySidebar">
+      <div class="sidebar-header">
+        <h2>Historial</h2>
+        <button class="btn-import-export" id="importExportBtn">Importar / Exportar</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">No hay productos guardados.</div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+
+      <!-- No product view -->
+      <div id="noProductView" class="no-product-view">
+        <h1>CalcuCost</h1>
+        <p class="subtitle">Calcula el costo real de tus recetas</p>
+        <button class="btn-new-product" id="newProductBtn">+ Nuevo producto</button>
+      </div>
+
+      <!-- Product view -->
+      <div id="productView" style="display:none">
+        <h1>CalcuCost</h1>
+        <p class="subtitle">Calcula el costo real de tus recetas</p>
+
+        <input class="product-name-input" id="productNameInput" type="text" placeholder="Nombre del producto">
+
+        <button class="btn btn-add" id="addBtn">+ Añadir ingrediente</button>
+
+        <div class="card" id="ingredientsCard">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ingrediente</th>
+                  <th>Precio</th>
+                  <th>Peso</th>
+                  <th>Gramos usados</th>
+                  <th>Total usado</th>
+                  <th style="text-align:center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="ingredientsBody">
+              </tbody>
+            </table>
+          </div>
+          <div id="emptyState" class="empty-state">No hay ingredientes añadidos aún.</div>
+          <div class="total-cost" id="totalCost">
+            <span>Gasto total</span>
+            <span id="totalAmount">$0</span>
+          </div>
+        </div>
+
+        
+
+        <div class="product-actions">
+          <button class="btn btn-save" id="saveProductBtn">Guardar producto</button>
+          <button class="btn btn-close-product" id="closeProductBtn">Cerrar producto</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: Add ingredient -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>Nuevo ingrediente</h2>
+      <div class="form-group">
+        <label for="inputName">Ingrediente</label>
+        <input type="text" id="inputName" placeholder="Ej: Harina">
+      </div>
+      <div class="form-group">
+        <label for="inputPrice">Precio ($)</label>
+        <input type="number" id="inputPrice" placeholder="Ej: 2000" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label for="inputWeight">Peso (g)</label>
+        <input type="number" id="inputWeight" placeholder="Ej: 1000" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label for="inputGrams">Gramos usados</label>
+        <input type="number" id="inputGrams" placeholder="Ej: 500" min="0" step="0.01">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="cancelBtn">Cancelar</button>
+        <button class="btn btn-confirm" id="confirmBtn">Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Import / Export -->
+  <div class="modal-overlay" id="importExportModal">
+    <div class="modal">
+      <h2>Importar / Exportar</h2>
+      
+      <div class="modal-actions" style="flex-direction:column">
+        <button class="btn btn-confirm" id="exportBtn">Exportar JSON</button>
+        <button class="btn btn-confirm" id="importBtn">Importar JSON</button>
+        <button class="btn btn-cancel" id="cancelImportExportBtn">Cancelar</button>
+      </div>
+      <input type="file" id="importFileInput" accept=".json" style="display:none">
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'calcuCost_appState';
+    const THEME_KEY = 'calcuCost_theme';
+    const OLD_INGREDIENTS_KEY = 'calcuCost_ingredients';
+
+    let appState = {
+      currentProductId: null,
+      products: []
+    };
+    let ingredients = [];
+    let editingId = null;
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    // ===== DOM refs =====
+    const themeToggle = $('#themeToggle');
+    const historyToggle = $('#historyToggle');
+    const sidebarBackdrop = $('#sidebarBackdrop');
+    const historySidebar = $('#historySidebar');
+    const historyList = $('#historyList');
+    const noProductView = $('#noProductView');
+    const productView = $('#productView');
+    const productNameInput = $('#productNameInput');
+    const addBtn = $('#addBtn');
+    const newProductBtn = $('#newProductBtn');
+    const modalOverlay = $('#modalOverlay');
+    const cancelBtn = $('#cancelBtn');
+    const confirmBtn = $('#confirmBtn');
+    const ingredientsBody = $('#ingredientsBody');
+    const emptyState = $('#emptyState');
+    const totalAmount = $('#totalAmount');
+    const inputName = $('#inputName');
+    const inputPrice = $('#inputPrice');
+    const inputWeight = $('#inputWeight');
+    const inputGrams = $('#inputGrams');
+    const saveProductBtn = $('#saveProductBtn');
+    const closeProductBtn = $('#closeProductBtn');
+    const importExportBtn = $('#importExportBtn');
+    const importExportModal = $('#importExportModal');
+    const exportBtn = $('#exportBtn');
+    const importBtn = $('#importBtn');
+    const importFileInput = $('#importFileInput');
+    const cancelImportExportBtn = $('#cancelImportExportBtn');
+
+    // ===== THEME =====
+    function loadTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem(THEME_KEY, next);
+    }
+
+    themeToggle.addEventListener('click', toggleTheme);
+
+    // ===== MOBILE SIDEBAR =====
+    function openSidebar() {
+      historySidebar.classList.add('open');
+      sidebarBackdrop.classList.add('open');
+    }
+
+    function closeSidebar() {
+      historySidebar.classList.remove('open');
+      sidebarBackdrop.classList.remove('open');
+    }
+
+    historyToggle.addEventListener('click', () => {
+      if (historySidebar.classList.contains('open')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+
+    sidebarBackdrop.addEventListener('click', closeSidebar);
+
+    // ===== STATE MANAGEMENT =====
+    function migrateOldData() {
+      const oldData = localStorage.getItem(OLD_INGREDIENTS_KEY);
+      if (oldData) {
+        try {
+          const oldIngredients = JSON.parse(oldData);
+          if (Array.isArray(oldIngredients) && oldIngredients.length > 0) {
+            const product = {
+              id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+              name: 'Mi producto',
+              ingredients: oldIngredients,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            appState.products.push(product);
+            appState.currentProductId = product.id;
+            ingredients = product.ingredients;
+            localStorage.removeItem(OLD_INGREDIENTS_KEY);
+          }
+        } catch {}
+      }
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          appState.currentProductId = parsed.currentProductId || null;
+          appState.products = parsed.products || [];
+          if (appState.currentProductId) {
+            const product = appState.products.find(p => p.id === appState.currentProductId);
+            if (product) {
+              ingredients = product.ingredients;
+            } else {
+              appState.currentProductId = null;
+              ingredients = [];
+            }
+          }
+        } catch {
+          appState = { currentProductId: null, products: [] };
+          ingredients = [];
+        }
+      } else {
+        migrateOldData();
+      }
+    }
+
+    function saveState() {
+      if (appState.currentProductId) {
+        const product = appState.products.find(p => p.id === appState.currentProductId);
+        if (product) {
+          product.ingredients = ingredients;
+          product.updatedAt = new Date().toISOString();
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        currentProductId: appState.currentProductId,
+        products: appState.products
+      }));
+    }
+
+    // ===== PRODUCT CRUD =====
+    function createNewProduct() {
+      const product = {
+        id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        name: '',
+        ingredients: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      appState.products.push(product);
+      appState.currentProductId = product.id;
+      ingredients = product.ingredients;
+      editingId = null;
+      saveState();
+      renderAll();
+      setTimeout(() => productNameInput.focus(), 50);
+    }
+
+    function switchProduct(productId) {
+      if (appState.currentProductId) {
+        const currentProduct = appState.products.find(p => p.id === appState.currentProductId);
+        if (currentProduct) {
+          currentProduct.ingredients = ingredients;
+          currentProduct.updatedAt = new Date().toISOString();
+        }
+      }
+      appState.currentProductId = productId;
+      const product = appState.products.find(p => p.id === productId);
+      if (product) {
+        ingredients = product.ingredients;
+      } else {
+        ingredients = [];
+      }
+      editingId = null;
+      saveState();
+      renderAll();
+      closeSidebar();
+    }
+
+    function saveProduct() {
+      const name = productNameInput.value.trim();
+      if (appState.currentProductId) {
+        const product = appState.products.find(p => p.id === appState.currentProductId);
+        if (product) {
+          product.name = name || 'Producto sin nombre';
+          product.ingredients = ingredients;
+          product.updatedAt = new Date().toISOString();
+        }
+      }
+      saveState();
+      renderAll();
+    }
+
+    function closeProduct() {
+      appState.currentProductId = null;
+      ingredients = [];
+      editingId = null;
+      saveState();
+      renderAll();
+    }
+
+    // ===== INGREDIENT CRUD =====
+    function calcTotal(ingredient) {
+      if (!ingredient.price || !ingredient.weight || !ingredient.grams) return 0;
+      return (ingredient.price / ingredient.weight) * ingredient.grams;
+    }
+
+    function formatCurrency(val) {
+      return '$' + val.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function renderIngredients() {
+      ingredientsBody.innerHTML = '';
+      let grandTotal = 0;
+
+      if (ingredients.length === 0) {
+        emptyState.style.display = 'block';
+        totalAmount.textContent = '$0';
+        return;
+      }
+      emptyState.style.display = 'none';
+
+      ingredients.forEach((ing, idx) => {
+        const total = calcTotal(ing);
+        grandTotal += total;
+        const tr = document.createElement('tr');
+        tr.dataset.idx = idx;
+
+        if (editingId === ing.id) {
+          tr.innerHTML = `
+            <td><input class="inline-input" type="text" value="${escapeHtml(ing.name)}" data-field="name"></td>
+            <td><input class="inline-input" type="number" value="${ing.price}" data-field="price" min="0" step="0.01"></td>
+            <td><input class="inline-input" type="number" value="${ing.weight}" data-field="weight" min="0" step="0.01"></td>
+            <td><input class="inline-input" type="number" value="${ing.grams}" data-field="grams" min="0" step="0.01"></td>
+            <td class="ingredient-total">${formatCurrency(total)}</td>
+            <td>
+              <div class="actions">
+                <button class="btn-icon btn-icon-confirm" data-action="confirm" title="Confirmar">
+                  <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+                <button class="btn-icon btn-icon-close" data-action="cancel-edit" title="Cancelar">
+                  <svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </td>
+          `;
+
+          const inputs = tr.querySelectorAll('.inline-input');
+          inputs.forEach(inp => {
+            inp.addEventListener('input', () => {
+              updateEditingRowTotal(tr, ing);
+            });
+          });
+
+        } else {
+          tr.innerHTML = `
+            <td class="ingredient-name">${escapeHtml(ing.name)}</td>
+            <td class="ingredient-price">${formatCurrency(ing.price)}</td>
+            <td class="ingredient-weight">${ing.weight} g</td>
+            <td class="ingredient-grams">${ing.grams} g</td>
+            <td class="ingredient-total">${formatCurrency(total)}</td>
+            <td>
+              <div class="actions">
+                <button class="btn-icon btn-icon-edit" data-action="edit" title="Editar">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn-icon btn-icon-delete" data-action="delete" title="Eliminar">
+                  <svg viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </td>
+          `;
+        }
+
+        ingredientsBody.appendChild(tr);
+      });
+
+      totalAmount.textContent = formatCurrency(grandTotal);
+    }
+
+    function updateEditingRowTotal(tr, ing) {
+      const fields = tr.querySelectorAll('.inline-input');
+      const price = parseFloat(fields[1].value) || 0;
+      const weight = parseFloat(fields[2].value) || 0;
+      const grams = parseFloat(fields[3].value) || 0;
+      const total = weight > 0 ? (price / weight) * grams : 0;
+      const totalTd = tr.querySelector('.ingredient-total');
+      if (totalTd) totalTd.textContent = formatCurrency(total);
+      updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+      let grandTotal = 0;
+      ingredients.forEach(ing => {
+        if (editingId === ing.id) {
+          const tr = document.querySelector(`tr[data-idx]`);
+          if (tr) {
+            const fields = tr.querySelectorAll('.inline-input');
+            const price = parseFloat(fields[1].value) || 0;
+            const weight = parseFloat(fields[2].value) || 0;
+            const grams = parseFloat(fields[3].value) || 0;
+            grandTotal += weight > 0 ? (price / weight) * grams : 0;
+          }
+        } else {
+          grandTotal += calcTotal(ing);
+        }
+      });
+      totalAmount.textContent = formatCurrency(grandTotal);
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ===== MODAL: ADD INGREDIENT =====
+    function openModal() {
+      inputName.value = '';
+      inputPrice.value = '';
+      inputWeight.value = '';
+      inputGrams.value = '';
+      modalOverlay.classList.add('open');
+      inputName.focus();
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('open');
+    }
+
+    function addIngredient() {
+      const name = inputName.value.trim();
+      const price = parseFloat(inputPrice.value);
+      const weight = parseFloat(inputWeight.value);
+      const grams = parseFloat(inputGrams.value);
+
+      if (!name) { alert('Ingresa el nombre del ingrediente.'); inputName.focus(); return; }
+      if (!price || price <= 0) { alert('Ingresa un precio válido.'); inputPrice.focus(); return; }
+      if (!weight || weight <= 0) { alert('Ingresa un peso válido.'); inputWeight.focus(); return; }
+      if (!grams || grams <= 0) { alert('Ingresa los gramos usados.'); inputGrams.focus(); return; }
+
+      ingredients.push({
+        id: Date.now() + Math.random(),
+        name,
+        price,
+        weight,
+        grams
+      });
+
+      saveState();
+      renderIngredients();
+      closeModal();
+    }
+
+    // ===== TABLE EVENTS =====
+    function handleTableClick(e) {
+      const btn = e.target.closest('.btn-icon');
+      if (!btn) return;
+      const tr = btn.closest('tr');
+      const idx = parseInt(tr.dataset.idx);
+      const action = btn.dataset.action;
+      const ing = ingredients[idx];
+
+      if (action === 'edit') {
+        if (editingId !== null) return;
+        editingId = ing.id;
+        renderIngredients();
+      } else if (action === 'delete') {
+        if (editingId !== null) return;
+        if (!confirm('¿Eliminar este ingrediente?')) return;
+        ingredients.splice(idx, 1);
+        saveState();
+        renderIngredients();
+      } else if (action === 'confirm') {
+        const fields = tr.querySelectorAll('.inline-input');
+        const name = fields[0].value.trim();
+        const price = parseFloat(fields[1].value);
+        const weight = parseFloat(fields[2].value);
+        const grams = parseFloat(fields[3].value);
+
+        if (!name) { alert('El nombre no puede estar vacío.'); return; }
+        if (!price || price <= 0) { alert('Ingresa un precio válido.'); return; }
+        if (!weight || weight <= 0) { alert('Ingresa un peso válido.'); return; }
+        if (!grams || grams <= 0) { alert('Ingresa los gramos usados.'); return; }
+
+        ing.name = name;
+        ing.price = price;
+        ing.weight = weight;
+        ing.grams = grams;
+        editingId = null;
+        saveState();
+        renderIngredients();
+      } else if (action === 'cancel-edit') {
+        editingId = null;
+        renderIngredients();
+      }
+    }
+
+    // ===== SIDEBAR RENDER =====
+    function renderSidebar() {
+      historyList.innerHTML = '';
+
+      if (appState.products.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">No hay productos guardados.</div>';
+        return;
+      }
+
+      appState.products.forEach(product => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        if (product.id === appState.currentProductId) {
+          item.classList.add('active');
+        }
+        item.dataset.productId = product.id;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'history-item-wrap';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'history-item-name';
+        nameSpan.textContent = product.name || 'Producto sin nombre';
+        wrap.appendChild(nameSpan);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'history-item-delete';
+        delBtn.dataset.action = 'delete-product';
+        delBtn.title = 'Eliminar producto';
+        delBtn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        wrap.appendChild(delBtn);
+
+        item.appendChild(wrap);
+        historyList.appendChild(item);
+      });
+    }
+
+    // ===== MAIN RENDER =====
+    function renderAll() {
+      if (appState.currentProductId) {
+        const product = appState.products.find(p => p.id === appState.currentProductId);
+        noProductView.style.display = 'none';
+        productView.style.display = 'block';
+        if (product) {
+          productNameInput.value = product.name;
+        }
+        renderIngredients();
+      } else {
+        noProductView.style.display = 'block';
+        productView.style.display = 'none';
+      }
+      renderSidebar();
+    }
+
+    // ===== IMPORT / EXPORT =====
+    function openImportExportModal() {
+      importExportModal.classList.add('open');
+    }
+
+    function closeImportExportModal() {
+      importExportModal.classList.remove('open');
+    }
+
+    function exportData() {
+      const data = JSON.stringify({ products: appState.products }, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'calcuCost_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      closeImportExportModal();
+    }
+
+    function handleImportFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (data.products && Array.isArray(data.products)) {
+            const count = data.products.length;
+            appState.products = appState.products.concat(data.products);
+            saveState();
+            renderAll();
+            closeImportExportModal();
+            alert(count + ' producto(s) importado(s) correctamente.');
+          } else {
+            alert('El archivo JSON no tiene el formato esperado. Debe contener un array "products".');
+          }
+        } catch {
+          alert('Error al leer el archivo JSON. Verifica que sea un archivo válido.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    // ===== EVENT LISTENERS =====
+
+    // Sidebar history clicks
+    historyList.addEventListener('click', (e) => {
+      const delBtn = e.target.closest('.history-item-delete');
+      if (delBtn) {
+        const item = delBtn.closest('.history-item');
+        if (!item) return;
+        const productId = item.dataset.productId;
+        const product = appState.products.find(p => p.id === productId);
+        const name = product ? (product.name || 'Producto sin nombre') : 'este producto';
+        if (!confirm('¿Eliminar "' + name + '" del historial?')) return;
+        appState.products = appState.products.filter(p => p.id !== productId);
+        if (appState.currentProductId === productId) {
+          appState.currentProductId = null;
+          ingredients = [];
+          editingId = null;
+        }
+        saveState();
+        renderAll();
+        return;
+      }
+
+      const item = e.target.closest('.history-item');
+      if (!item) return;
+      const productId = item.dataset.productId;
+      if (productId) {
+        switchProduct(productId);
+      }
+    });
+
+    // Table clicks
+    ingredientsBody.addEventListener('click', handleTableClick);
+
+    // Add ingredient
+    addBtn.addEventListener('click', openModal);
+    cancelBtn.addEventListener('click', closeModal);
+    confirmBtn.addEventListener('click', addIngredient);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    // New product
+    newProductBtn.addEventListener('click', createNewProduct);
+
+    // Save / Close product
+    saveProductBtn.addEventListener('click', saveProduct);
+    closeProductBtn.addEventListener('click', closeProduct);
+
+    // Import / Export
+    importExportBtn.addEventListener('click', openImportExportModal);
+    cancelImportExportBtn.addEventListener('click', closeImportExportModal);
+    importExportModal.addEventListener('click', (e) => {
+      if (e.target === importExportModal) closeImportExportModal();
+    });
+    exportBtn.addEventListener('click', exportData);
+    importBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', handleImportFile);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (importExportModal.classList.contains('open')) {
+          closeImportExportModal();
+        } else if (modalOverlay.classList.contains('open')) {
+          closeModal();
+        } else if (editingId !== null) {
+          editingId = null;
+          renderIngredients();
+        }
+      }
+    });
+
+    // Enter key on product name to focus add button
+    productNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addBtn.focus();
+      }
+    });
+
+    // ===== INIT =====
+    loadTheme();
+    loadState();
+    renderAll();
+  </script>
+
+</body>
+</html>
